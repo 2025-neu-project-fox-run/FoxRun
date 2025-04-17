@@ -104,21 +104,23 @@ export class Obstacle extends Sprite {
 
 let brightness = 0;
 let timer = 0;
-let difficulty = 1;
+let difficulty = parseInt(localStorage.getItem("difficulty")) ?? 1;
 let player = null;
+let bgColor = 200;
+let fgColor = 0;
 
 export function update() {
   // Intro sequence
   if (frameCount % 5 === 0) {
-    if (brightness < 200) {
+    if (brightness < bgColor) {
       background((brightness += 10));
     } else {
       timer += 1;
       if (timer < 5) return;
 
       // This turned out way too cool...
-      fill(timer < 25 ? 0 : 200);
-      stroke(timer < 25 ? 0 : 200);
+      fill(timer < 25 ? fgColor : bgColor);
+      stroke(timer < 25 ? fgColor : bgColor);
       rectMode(CENTER);
       rect(width / 2, height / 2, 24, 24);
       noStroke();
@@ -131,7 +133,7 @@ export function update() {
 
   // Game sequence
   if (timer > 50) {
-    background(200);
+    background(bgColor);
 
     if (!player) {
       player = new Player();
@@ -139,22 +141,25 @@ export function update() {
     }
 
     if (!player.playing) {
+      if (frameCount % 2 === 0 && bgColor != 200) bgColor += 10;
+      if (frameCount % 2 === 0 && fgColor != 0) fgColor -= 10;
+
       obstacles.removeAll();
 
       player.lane = 2;
       player.points = 0;
 
-      fill(0);
+      fill(fgColor);
       textAlign(LEFT);
       text("Select difficulty", width / 7, height - 108);
       textSize(3);
 
       for (const [dif, i] of Object.entries({ easy: 0, medium: 1, hard: 2 })) {
-        fill(difficulty == 2 - i ? "red" : 0);
+        fill(difficulty == 2 - i ? "red" : fgColor);
         text(
           `[${i}]: ${dif.charAt(0).toUpperCase() + dif.slice(1)}`,
           width / 7,
-          height - 72 - (2 - i) * 12
+          height - 80 - (2 - i) * 8
         );
       }
 
@@ -162,13 +167,16 @@ export function update() {
       if (kb.pressed("1")) difficulty = 1;
       if (kb.pressed("0")) difficulty = 2;
 
-      fill(!kb.pressed("enter") ? 0 : 200);
+      fill(!kb.pressed("enter") ? fgColor : bgColor);
       textSize(4);
       textAlign(CENTER);
       text(`Press [return] to start`, width / 2, height - 44);
-      fill(200);
+      fill(bgColor);
 
-      if (kb.pressed("enter")) player.playing = true;
+      if (kb.pressed("enter")) {
+        localStorage.setItem("difficulty", difficulty);
+        player.playing = true;
+      }
     } else {
       // TODO: Make gameplay work
 
@@ -187,20 +195,31 @@ export function update() {
           }
         }
 
+        if (Math.floor(player.points / 700) % 2 !== 0) {
+          if (frameCount % 2 === 0 && bgColor != 0) bgColor -= 10;
+          if (frameCount % 2 === 0 && fgColor != 200) fgColor += 10;
+        } else {
+          if (frameCount % 2 === 0 && bgColor != 200) bgColor += 10;
+          if (frameCount % 2 === 0 && fgColor != 0) fgColor -= 10;
+        }
+
         if (frameCount % 3 === 0) player.points += 1;
 
-        fill(0);
+        fill(fgColor);
         textSize(4);
         text(`${player.points}`, width / 2, height - 96);
-        fill(200);
+        fill(bgColor);
 
         if (kb.pressed("enter")) player.playing = false;
       } else {
+        if (frameCount % 2 === 0 && bgColor != 200) bgColor += 10;
+        if (frameCount % 2 === 0 && fgColor != 0) fgColor -= 10;
+
         for (const obstacle of obstacles) {
           obstacle.color = "#00000010";
         }
 
-        fill(0);
+        fill(fgColor);
         textSize(4);
 
         textAlign(CENTER);
@@ -228,12 +247,11 @@ export function update() {
 
         for (let i = 0; i < leaderboard.length; i++) {
           const entry = leaderboard[i];
-          console.log(entry);
           if (
             [playerIndex + 1, playerIndex + 2, playerIndex, 0].includes(i) ||
             (playerIndex === 0 && i === playerIndex + 3)
           ) {
-            fill(i == playerIndex ? "red" : 0);
+            fill(i == playerIndex ? "red" : fgColor);
             text(
               `${entry.points} ${"-".repeat(
                 15 + 5 - entry.points.toString().length
@@ -258,7 +276,7 @@ export function update() {
         }
 
         textAlign(CENTER);
-        fill(200);
+        fill(bgColor);
 
         if (kb.pressed("enter") && player.initials.length === 3) {
           localStorage.setItem("leaderboard", JSON.stringify(leaderboard));

@@ -93,6 +93,9 @@ export class Obstacle extends Sprite {
   }
 
   update() {
+    if (this.collides(obstacles)) {
+      this.remove();
+    }
     this.rotation = 0;
     if (player.playing && !player.lost) this.y += this.speed;
     this.x = (this.lane * width) / 5 + width / 10;
@@ -101,6 +104,7 @@ export class Obstacle extends Sprite {
 
 let brightness = 0;
 let timer = 0;
+let difficulty = 1;
 let player = null;
 
 export function update() {
@@ -140,8 +144,28 @@ export function update() {
       player.lane = 2;
       player.points = 0;
 
+      fill(0);
+      textAlign(LEFT);
+      text("Select difficulty", width / 7, height - 108);
+      textSize(3);
+
+      for (const [dif, i] of Object.entries({ easy: 0, medium: 1, hard: 2 })) {
+        fill(difficulty == 2 - i ? "red" : 0);
+        text(
+          `[${i}]: ${dif.charAt(0).toUpperCase() + dif.slice(1)}`,
+          width / 7,
+          height - 72 - (2 - i) * 12
+        );
+      }
+
+      if (kb.pressed("2")) difficulty = 0;
+      if (kb.pressed("1")) difficulty = 1;
+      if (kb.pressed("0")) difficulty = 2;
+
       fill(!kb.pressed("enter") ? 0 : 200);
-      text(`Press [return] to start`, width / 2, height - 56);
+      textSize(4);
+      textAlign(CENTER);
+      text(`Press [return] to start`, width / 2, height - 44);
       fill(200);
 
       if (kb.pressed("enter")) player.playing = true;
@@ -150,8 +174,8 @@ export function update() {
 
       if (!player.lost) {
         player.initials = "";
-        if (frameCount % 90 === 0) {
-          let obstacleCount = Math.floor(Math.random() * 3) + 1;
+        if (frameCount % (45 + difficulty * 30) === 0) {
+          let obstacleCount = Math.floor(Math.random() * 2) + 2;
           let usedLanes = new Set();
           for (let i = 0; i < obstacleCount; i++) {
             let lane;

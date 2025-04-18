@@ -8,4 +8,4 @@ This game is a pixel infinite-runner aiming to imitate the style of a classic Ga
 
 [Music (Adventure Music Collection Pack 1 by Ansimuz on itch.io)](https://ansimuz.itch.io/adventure-music-collection-pack-1)
 
-["Game over" / "Invalid input" sound effect (Sound Pack (55 Sounds) [Free] by semko on itch.io)](semko)
+["Game over" / "Invalid input" sound effect (Sound Pack (55 Sounds) [Free] by semko on itch.io)](https://semkou.itch.io/sound-pack-free)

@@ -1,6 +1,3 @@
-// TODO: Get more assets
-// TODO: Maybe add audio
-
 // Stores all the obstacles generated on the fly
 const obstacles = new Group();
 
@@ -32,7 +29,7 @@ export class Player extends Sprite {
     this.overlap(obstacles);
 
     this.collider = "static";
-    this.spriteSheet = "/assets/FOXSPRITESHEET.png";
+    this.spriteSheet = "/assets/img/FOXSPRITESHEET.png";
 
     this.addAnis({
       running: {
@@ -54,6 +51,9 @@ export class Player extends Sprite {
   update() {
     if (this.collides(obstacles)) {
       this.lost = true;
+      gameOverSound.play();
+      if (!gameMusic.paused) gameMusic.stop();
+      if (menuMusic.paused) menuMusic.play();
     }
 
     if (this.playing && !this.lost) {
@@ -93,11 +93,13 @@ export class Obstacle extends Sprite {
   }
 
   update() {
-    if (this.collides(obstacles)) {
-      this.remove();
-    }
+    // This is a way to prevent a bug from happening where two obstacles get stuck into each other, sometimes causes only a single object spawning, but it happens rarely and it's not like the player will mind the game being more kind to them from time to time
+    if (this.collides(obstacles)) this.remove();
+
     this.rotation = 0;
+
     if (player.playing && !player.lost) this.y += this.speed;
+
     this.x = (this.lane * width) / 5 + width / 10;
   }
 }
@@ -108,6 +110,19 @@ let difficulty = parseInt(localStorage.getItem("difficulty")) ?? 1;
 let player = null;
 let bgColor = 200;
 let fgColor = 0;
+
+let gameOverSound = loadSound("/assets/audio/gameover.mp3");
+gameOverSound.volume = 0.3;
+gameOverSound.loop = false;
+
+let gameMusic = loadSound("/assets/audio/game.mp3");
+gameMusic.volume = 0.3;
+gameMusic.loop = true;
+
+// Had to convert it from OGG to MP3 and then render it with Premiere Pro, because for some reason p5play couldn't decode the file lol
+let menuMusic = loadSound("/assets/audio/menu.mp3");
+gameMusic.volume = 0.3;
+gameMusic.loop = true;
 
 export function update() {
   // Intro sequence
@@ -141,6 +156,8 @@ export function update() {
     }
 
     if (!player.playing) {
+      if (!menuMusic.isPlaying()) menuMusic.play();
+      if (!gameMusic.paused) gameMusic.stop();
       if (frameCount % 2 === 0 && bgColor != 200) bgColor += 10;
       if (frameCount % 2 === 0 && fgColor != 0) fgColor -= 10;
 
@@ -174,14 +191,18 @@ export function update() {
       fill(bgColor);
 
       if (kb.pressed("enter")) {
+        gameMusic.play();
+        menuMusic.stop();
         localStorage.setItem("difficulty", difficulty);
         player.playing = true;
       }
     } else {
-      // TODO: Make gameplay work
-
       if (!player.lost) {
+        if (!gameMusic.isPlaying()) gameMusic.play();
+        if (!menuMusic.paused) menuMusic.stop();
+
         player.initials = "";
+
         if (frameCount % (45 + difficulty * 30) === 0) {
           let obstacleCount = Math.floor(Math.random() * 2) + 2;
           let usedLanes = new Set();
@@ -212,11 +233,16 @@ export function update() {
 
         if (kb.pressed("enter")) player.playing = false;
       } else {
+        setTimeout(() => {
+          if (!menuMusic.isPlaying()) menuMusic.play();
+          if (!gameMusic.paused) gameMusic.stop();
+        }, 200);
+
         if (frameCount % 2 === 0 && bgColor != 200) bgColor += 10;
         if (frameCount % 2 === 0 && fgColor != 0) fgColor -= 10;
 
         for (const obstacle of obstacles) {
-          obstacle.color = "#00000010";
+          obstacle.color = "#00000020";
         }
 
         fill(fgColor);
@@ -231,7 +257,7 @@ export function update() {
         let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
 
         leaderboard.push({
-          initials: player.initials.padEnd(3, "X"),
+          initials: player.initials.padEnd(3, "-"),
           points: player.points,
         });
 
@@ -239,7 +265,7 @@ export function update() {
 
         const playerIndex = leaderboard.findIndex(
           (entry) =>
-            entry.initials === player.initials.padEnd(3, "X") &&
+            entry.initials === player.initials.padEnd(3, "-") &&
             entry.points === player.points
         );
 
@@ -255,7 +281,7 @@ export function update() {
             text(
               `${entry.points} ${"-".repeat(
                 15 + 5 - entry.points.toString().length
-              )} ${entry.initials.padEnd(3, "X")}`,
+              )} ${entry.initials.padEnd(3, "-")}`,
               12,
               height - 72 + c * 12
             );
@@ -278,10 +304,18 @@ export function update() {
         textAlign(CENTER);
         fill(bgColor);
 
-        if (kb.pressed("enter") && player.initials.length === 3) {
-          localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
-          player.lost = false;
-          player.playing = false;
+        if (kb.pressed("enter")) {
+          if (player.initials.length === 3) {
+            if (!gameMusic.paused) gameMusic.stop();
+            if (!menuMusic.isPlaying()) menuMusic.play();
+
+            localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
+
+            player.lost = false;
+            player.playing = false;
+          } else {
+            gameOverSound.play();
+          }
         }
       }
     }

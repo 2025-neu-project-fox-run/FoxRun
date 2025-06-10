@@ -29,7 +29,7 @@ export class Player extends Sprite {
     this.overlap(obstacles);
 
     this.collider = "static";
-    this.spriteSheet = "/assets/img/FOXSPRITESHEET.png";
+    this.spriteSheet = "./assets/img/FOXSPRITESHEET.png";
 
     this.addAnis({
       running: {
@@ -106,21 +106,24 @@ export class Obstacle extends Sprite {
 
 let brightness = 0;
 let timer = 0;
-let difficulty = parseInt(localStorage.getItem("difficulty")) ?? 1;
 let player = null;
 let bgColor = 200;
 let fgColor = 0;
 
-let gameOverSound = loadSound("/assets/audio/gameover.mp3");
+if (!localStorage.getItem("difficulty"))
+  localStorage.setItem("difficulty", "1");
+let difficulty = parseInt(localStorage.getItem("difficulty"));
+
+let gameOverSound = loadSound("./assets/audio/gameover.mp3");
 gameOverSound.volume = 0.3;
 gameOverSound.loop = false;
 
-let gameMusic = loadSound("/assets/audio/game.mp3");
+let gameMusic = loadSound("./assets/audio/game.mp3");
 gameMusic.volume = 0.3;
 gameMusic.loop = true;
 
 // Had to convert it from OGG to MP3 and then render it with Premiere Pro, because for some reason p5play couldn't decode the file lol
-let menuMusic = loadSound("/assets/audio/menu.mp3");
+let menuMusic = loadSound("./assets/audio/menu.mp3");
 gameMusic.volume = 0.3;
 gameMusic.loop = true;
 

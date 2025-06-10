@@ -141,8 +141,12 @@ export function update() {
       noStroke();
       textAlign(CENTER);
       textSize(4);
+      // This fixes a bug where the text would show up in different fonts due to the actual font not loading yet
+      fill(bgColor);
+      rect(width / 2, height - 10, width, 24);
+      fill(timer < 25 ? fgColor : bgColor);
       textFont("'Press Start 2P'");
-      text(`© Team name, ${new Date().getFullYear()}`, width / 2, height - 10);
+      text(`© MB_NZS_NEM, 2025`, width / 2, height - 10);
     }
   }
 
